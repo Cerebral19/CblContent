@@ -1,53 +1,76 @@
 'use client';
-import AuthGuard from '@/components/auth/AuthGuard';
+
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push('/login');
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <div className="flex-shrink-0 flex items-center">
-                  <span className="text-xl font-bold text-blue-600">Social Content Manager</span>
-                </div>
-                <div className="ml-6 flex space-x-8">
-                  <a
-                    href="/dashboard"
-                    className="inline-flex items-center px-1 pt-1 border-b-2 border-blue-500 text-sm font-medium text-gray-900"
-                  >
-                    Dashboard
-                  </a>
-                  <a
-                    href="/dashboard/clients"
-                    className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  >
-                    Clientes
-                  </a>
-                </div>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 justify-between">
+            <div className="flex">
+              <div className="flex flex-shrink-0 items-center">
+                <Link href="/dashboard" className="text-xl font-bold text-blue-600">
+                  Cronogramas
+                </Link>
               </div>
-              <div className="flex items-center">
-                <button
-                  onClick={async () => {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                    window.location.href = '/login';
-                  }}
-                  className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-                >
-                  Sair
-                </button>
+              <div className="ml-6 flex items-center space-x-4">
+                <Link href="/dashboard/clients" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600">
+                  Clientes
+                </Link>
               </div>
             </div>
+            <div className="flex items-center">
+              <button
+                onClick={handleSignOut}
+                className="ml-4 px-3 py-2 text-sm font-medium text-gray-700 hover:text-red-600"
+              >
+                Sair
+              </button>
+            </div>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
-      </div>
-    </AuthGuard>
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        {children}
+      </main>
+    </div>
   );
 }
