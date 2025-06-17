@@ -149,7 +149,6 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
 
       for (const item of items) {
         const feedback = feedbacks[item.id];
-
         if (!feedback) continue;
 
         const { data: existingFeedback } = await supabase
